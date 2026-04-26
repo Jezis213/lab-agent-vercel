@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实验报告修改助手 V3 · Jezis 专属</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/docx@9.0.0/build/index.umd.js"></script>
+<style>
+:root {
+  --bg: #0f0f11;
+  --surface: #17171a;
+  --surface2: #1e1e22;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8e8ec;
+  --text2: #8a8a9a;
+  --text3: #555566;
+  --accent: #7c6fcd;
+  --accent2: #a89be8;
+  --accent-bg: rgba(124,111,205,0.12);
+  --teal: #4ec9a0;
+  --teal-bg: rgba(78,201,160,0.1);
+  --amber: #e8a455;
+  --amber-bg: rgba(232,164,85,0.1);
+  --coral: #e07070;
+  --coral-bg: rgba(224,112,112,0.1);
+  --green: #6dbe8d;
+  --green-bg: rgba(109,190,141,0.1);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --mono: 'JetBrains Mono', monospace;
+  --serif: 'Noto Serif SC', serif;
+  --sans: 'Noto Sans SC', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; min-height: 100vh; line-height: 1.7; }
+.noise { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.025; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.accent-line { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 100; background: linear-gradient(90deg, transparent, var(--accent), var(--teal), transparent); }
+.layout { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 4rem; position: relative; z-index: 1; }
+.header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.5rem; }
+.title { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.title span { color: var(--accent2); }
+.version-tag { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); background: var(--accent-bg); border: 1px solid rgba(124,111,205,0.2); padding: 3px 9px; border-radius: 99px; margin-top: 5px; }
+.subtitle { font-size: 0.82rem; color: var(--text3); letter-spacing: 0.02em; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1rem; }
+.tag { font-size: 0.7rem; padding: 2px 9px; border-radius: 99px; font-weight: 400; letter-spacing: 0.02em; }
+.tag-p { background: var(--accent-bg); color: var(--accent2); border: 1px solid rgba(124,111,205,0.2); }
+.tag-t { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(78,201,160,0.2); }
+.tag-a { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(232,164,85,0.2); }
+.tag-c { background: var(--coral-bg); color: var(--coral); border: 1px solid rgba(224,112,112,0.2); }
+.tag-g { background: var(--green-bg); color: var(--green); border: 1px solid rgba(109,190,141,0.2); }
+.section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+.section-title { font-family: var(--mono); font-size: 0.68rem; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field label { font-size: 0.72rem; color: var(--text2); display: block; margin-bottom: 5px; letter-spacing: 0.03em; }
+.field input, .field textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--sans); font-size: 0.82rem; font-weight: 300; padding: 8px 11px; outline: none; transition: border-color 0.2s; }
+.field input:focus, .field textarea:focus { border-color: var(--accent); }
+.field input::placeholder, .field textarea::placeholder { color: var(--text3); }
+.field textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+.sec-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px; }
+.sec-item:last-child { margin-bottom: 0; }
+.sec-item label { font-size: 0.72rem; color: var(--accent2); display: block; margin-bottom: 6px; font-weight: 500; letter-spacing: 0.03em; }
+.sec-item textarea { width: 100%; background: transparent; border: none; color: var(--text); font-family: var(--sans); font-size: 0.82rem; font-weight: 300; padding: 0; outline: none; resize: vertical; min-height: 64px; line-height: 1.7; }
+.sec-item textarea::placeholder { color: var(--text3); }
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mcard { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 13px; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+.mcard:hover { border-color: var(--border2); }
+.mcard.on { border-color: var(--accent); background: var(--accent-bg); }
+.mcard strong { font-size: 0.82rem; font-weight: 500; color: var(--text); display: block; margin-bottom: 2px; }
+.mcard span { font-size: 0.72rem; color: var(--text3); }
+.mcard.on strong { color: var(--accent2); }
+.mcard.on span { color: var(--accent); }
+.run-btn { width: 100%; padding: 12px; background: var(--accent-bg); border: 1px solid var(--accent); border-radius: var(--radius); color: var(--accent2); font-family: var(--sans); font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s, opacity 0.2s; letter-spacing: 0.02em; margin-bottom: 1rem; }
+.run-btn:hover { background: rgba(124,111,205,0.2); }
+.run-btn:active { transform: scale(0.99); }
+.run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.progress { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.prog-title { font-family: var(--mono); font-size: 0.68rem; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; }
+.prog-item { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 0.8rem; color: var(--text2); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: background 0.3s; }
+.dot.active { background: var(--accent); animation: pulse 1s infinite; }
+.dot.done { background: var(--teal); }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+.output { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.out-hd { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+.out-label { font-family: var(--mono); font-size: 0.68rem; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+.dl-btn { margin-left: auto; background: var(--teal-bg); border: 1px solid rgba(78,201,160,0.3); border-radius: 99px; color: var(--teal); font-size: 0.72rem; padding: 4px 14px; cursor: pointer; font-family: var(--mono); display: none; transition: background 0.2s; }
+.dl-btn:hover { background: rgba(78,201,160,0.18); }
+.out-preview { font-family: var(--mono); font-size: 0.78rem; color: var(--text2); line-height: 1.8; white-space: pre-wrap; max-height: 360px; overflow-y: auto; padding-right: 4px; }
+.out-preview::-webkit-scrollbar { width: 4px; }
+.out-preview::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(124,111,205,0.3); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.footer { margin-top: 2rem; text-align: center; font-size: 0.72rem; color: var(--text3); font-family: var(--mono); }
+@media (max-width: 500px) { .grid3 { grid-template-columns: 1fr 1fr; } .title { font-size: 1.3rem; } }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="accent-line"></div>
+<div class="layout">
+
+  <div class="header">
+    <div class="header-top">
+      <h1 class="title">实验报告<span>修改助手</span></h1>
+      <span class="version-tag">V3</span>
+    </div>
+    <p class="subtitle">山东大学计算机科学与技术学院 · 专为 Jezis 定制</p>
+    <div class="tags">
+      <span class="tag tag-p">无括号 / 无引号</span>
+      <span class="tag tag-t">完整章节结构</span>
+      <span class="tag tag-a">风格对齐样本</span>
+      <span class="tag tag-c">输出 .docx</span>
+      <span class="tag tag-g">逻辑严谨</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">基本信息</div>
+    <div class="grid3">
+      <div class="field"><label>学号</label><input type="text" id="sid" placeholder="202400130033" /></div>
+      <div class="field"><label>姓名</label><input type="text" id="sname" placeholder="杨金翰" /></div>
+      <div class="field"><label>班级</label><input type="text" id="sclass" placeholder="计科 24.1" /></div>
+    </div>
+    <div class="grid3">
+      <div class="field"><label>实验题目</label><input type="text" id="stitle" placeholder="逻辑运算电路设计" /></div>
+      <div class="field"><label>实验学时</label><input type="text" id="shours" placeholder="2h" /></div>
+      <div class="field"><label>实验日期</label><input type="text" id="sdate" placeholder="2026.x.xx" /></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="field"><label>硬件环境</label><textarea id="shw" placeholder="处理器、内存、操作系统等设备信息..."></textarea></div>
+      <div class="field"><label>软件环境</label><textarea id="ssw" placeholder="Vivado 2024 版 等..."></textarea></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">各章节原始内容（粘贴杂乱原文，AI 将逐节修改并对齐样本风格）</div>
+    <div class="sec-item"><label>实验目的</label><textarea id="s-purpose" placeholder="粘贴实验目的原文，排版杂乱无妨..."></textarea></div>
+    <div class="sec-item"><label>实验内容与设计（含操作步骤）</label><textarea id="s-content" placeholder="粘贴实验内容、设计思路、操作步骤等..."></textarea></div>
+    <div class="sec-item"><label>实验结果</label><textarea id="s-result" placeholder="粘贴实验结果描述..."></textarea></div>
+    <div class="sec-item"><label>结论分析与体会</label><textarea id="s-conclusion" placeholder="粘贴结论分析原文..."></textarea></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">修改模式</div>
+    <div class="mode-grid">
+      <div class="mcard on" id="opt-polish" onclick="sel('polish')"><strong>润色修改</strong><span>表达流畅度与结构优化</span></div>
+      <div class="mcard" id="opt-logic" onclick="sel('logic')"><strong>逻辑检查</strong><span>修正推理漏洞与跳跃</span></div>
+      <div class="mcard" id="opt-format" onclick="sel('format')"><strong>格式规范</strong><span>统一编排层级与术语</span></div>
+      <div class="mcard" id="opt-full" onclick="sel('full')"><strong>全面修改</strong><span>润色 + 逻辑 + 格式</span></div>
+    </div>
+  </div>
+
+  <button class="run-btn" id="run-btn" onclick="run()">
+    <span id="btn-txt">逐节修改并生成 Word 文档</span>
+  </button>
+
+  <div class="progress" id="prog">
+    <div class="prog-title">修改进度</div>
+    <div class="prog-item"><div class="dot" id="pd0"></div><span id="pt0">等待：实验目的</span></div>
+    <div class="prog-item"><div class="dot" id="pd1"></div><span id="pt1">等待：实验内容与设计</span></div>
+    <div class="prog-item"><div class="dot" id="pd2"></div><span id="pt2">等待：实验结果</span></div>
+    <div class="prog-item"><div class="dot" id="pd3"></div><span id="pt3">等待：结论分析与体会</span></div>
+    <div class="prog-item"><div class="dot" id="pd4"></div><span id="pt4">等待：生成 Word 文档</span></div>
+  </div>
+
+  <div class="output" id="output">
+    <div class="out-hd">
+      <div class="status-dot"></div>
+      <span class="out-label">修改完成 · 预览</span>
+      <button class="dl-btn" id="dl-btn" onclick="download()">下载 .docx</button>
+    </div>
+    <div class="out-preview" id="out-text"></div>
+  </div>
+
+  <div class="footer">lab-report-agent-v3 · Jezis 专属 · Key 由服务端安全持有</div>
+</div>
+
+<script>
+let mode = 'polish';
+let sections = {};
+
+function sel(m) {
+  mode = m;
+  ['polish','logic','format','full'].forEach(k => {
+    document.getElementById('opt-' + k).classList.toggle('on', k === m);
+  });
+}
+
+function setDot(i, state) {
+  const labels = ['实验目的','实验内容与设计','实验结果','结论分析与体会','生成 Word 文档'];
+  const d = document.getElementById('pd' + i);
+  const t = document.getElementById('pt' + i);
+  d.className = 'dot' + (state === 'done' ? ' done' : state === 'active' ? ' active' : '');
+  t.textContent = (state === 'done' ? '完成：' : state === 'active' ? '处理中：' : '等待：') + labels[i];
+}
+
+function sysPrompt() {
+  const modeExtra = {
+    polish: '以润色表达流畅度为主，保持原有信息与结构框架不变。',
+    logic: '重点检查并修正逻辑推理漏洞，确保每个结论都有充分的前提支撑，标注并修正所有逻辑跳跃之处。',
+    format: '统一编排层级、术语中英文大小写、数字单位书写规范，使格式符合学术报告标准。',
+    full: '同时兼顾表达润色、逻辑严谨性和格式规范三个维度，进行全面修改。'
+  };
+  return `你是山东大学计算机科学与技术学院实验报告专业修改助手，服务对象是 Jezis。
+
+风格规范（严格对齐样本报告）：
+1. 正式学术报告体，语句以长句为主，逻辑层次清晰，用因此、从而、进而、在此基础上等连接词过渡
+2. 技术术语须保持精准，中英文术语首次出现时中文在前、英文缩写紧随其后
+3. 描述操作步骤时，动词选用执行、完成、配置、生成、验证等具有工程规范感的词汇
+4. 结论段落须形成从现象到机制再到意义的三层递进结构
+5. 绝对禁止使用任何括号，包括中文括号、英文括号、方括号；绝对禁止使用任何引号，包括中英文引号、单引号、双引号。需要补充说明时，用破折号或顿号或连接词替代括号；用冒号加直接陈述替代引号
+6. 禁止口语化表达，禁止逻辑跳跃，每个结论须有充分前提支撑
+
+本次修改任务：${modeExtra[mode] || ''}
+
+直接输出修改后的文本内容，不加任何前缀说明，不加章节标题，只输出修改后的正文段落，段落之间空一行。`;
+}
+
+async function callBackend(text) {
+  const resp = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: sysPrompt(), userMessage: '修改以下内容：\n\n' + text })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || '服务端请求失败');
+  }
+  const data = await resp.json();
+  return data.result || text;
+}
+
+async function run() {
+  const fields = [
+    { id: 's-purpose', key: 'purpose' },
+    { id: 's-content', key: 'content' },
+    { id: 's-result', key: 'result' },
+    { id: 's-conclusion', key: 'conclusion' }
+  ];
+  const hasAny = fields.some(f => document.getElementById(f.id).value.trim());
+  if (!hasAny) { alert('请至少填写一个章节的内容'); return; }
+
+  const btn = document.getElementById('run-btn');
+  const btnTxt = document.getElementById('btn-txt');
+  btn.disabled = true;
+  btnTxt.innerHTML = '<span class="spinner"></span> 逐节修改中...';
+
+  document.getElementById('prog').style.display = 'block';
+  document.getElementById('output').style.display = 'none';
+  document.getElementById('dl-btn').style.display = 'none';
+  sections = {};
+
+  for (let i = 0; i < fields.length; i++) {
+    const f = fields[i];
+    const raw = document.getElementById(f.id).value.trim();
+    if (raw) {
+      setDot(i, 'active');
+      try {
+        sections[f.key] = await callBackend(raw);
+        setDot(i, 'done');
+      } catch (e) {
+        alert('第 ' + (i+1) + ' 节修改失败：' + e.message);
+        sections[f.key] = raw;
+        setDot(i, 'done');
+      }
+    } else {
+      sections[f.key] = '';
+      setDot(i, 'done');
+    }
+  }
+
+  setDot(4, 'active');
+  const preview = [
+    sections.purpose    ? '【实验目的】\n' + sections.purpose : '',
+    sections.content    ? '【实验内容与设计】\n' + sections.content : '',
+    sections.result     ? '【实验结果】\n' + sections.result : '',
+    sections.conclusion ? '【结论分析与体会】\n' + sections.conclusion : ''
+  ].filter(Boolean).join('\n\n');
+
+  document.getElementById('out-text').textContent = preview;
+  document.getElementById('output').style.display = 'block';
+  document.getElementById('dl-btn').style.display = 'block';
+  setDot(4, 'done');
+  btn.disabled = false;
+  btnTxt.textContent = '逐节修改并生成 Word 文档';
+}
+
+function buildDocx() {
+  const { Document, Paragraph, TextRun, Table, TableRow, TableCell,
+          AlignmentType, WidthType, BorderStyle } = docx;
+  const meta = {
+    sid:   document.getElementById('sid').value || '',
+    name:  document.getElementById('sname').value || '',
+    cls:   document.getElementById('sclass').value || '',
+    title: document.getElementById('stitle').value || '',
+    hours: document.getElementById('shours').value || '',
+    date:  document.getElementById('sdate').value || '',
+    hw:    document.getElementById('shw').value || '',
+    sw:    document.getElementById('ssw').value || ''
+  };
+  const bdr = { style: BorderStyle.SINGLE, size: 4, color: '000000' };
+  const borders = { top: bdr, bottom: bdr, left: bdr, right: bdr };
+  const pad = { top: 100, bottom: 100, left: 150, right: 150 };
+  const TW = 9026;
+  function mkCell(text, width, colSpan, bold) {
+    const paras = String(text || '').split('\n').filter(l => l.trim()).map(line =>
+      new Paragraph({ spacing: { line: 360 }, children: [new TextRun({ text: line, font: 'SimSun', size: 24, bold: !!bold })] })
+    );
+    if (!paras.length) paras.push(new Paragraph({ children: [new TextRun({ text: '', font: 'SimSun', size: 24 })] }));
+    const cfg = { borders, margins: pad, width: { size: width, type: WidthType.DXA }, children: paras };
+    if (colSpan) cfg.columnSpan = colSpan;
+    return new TableCell(cfg);
+  }
+  function bodyRow(label, content) {
+    return new TableRow({ children: [ mkCell(label + '：', 2200, null, true), mkCell(content, TW - 2200) ] });
+  }
+  const infoTable = new Table({
+    width: { size: TW, type: WidthType.DXA }, columnWidths: [3000, 2026, 4000],
+    rows: [
+      new TableRow({ children: [ mkCell('学号：' + meta.sid, 3000), mkCell('姓名：' + meta.name, 2026), mkCell('班级：' + meta.cls, 4000) ] }),
+      new TableRow({ children: [ mkCell('实验题目：' + meta.title, TW, 3) ] }),
+      new TableRow({ children: [ mkCell('实验学时：' + meta.hours, 3000), mkCell('实验日期：' + meta.date, 6026, 2) ] })
+    ]
+  });
+  const bodyTable = new Table({
+    width: { size: TW, type: WidthType.DXA }, columnWidths: [2200, TW - 2200],
+    rows: [
+      bodyRow('实验目的', sections.purpose),
+      bodyRow('硬件环境', meta.hw),
+      bodyRow('软件环境', meta.sw),
+      bodyRow('实验内容与设计', sections.content),
+      bodyRow('实验结果', sections.result),
+      bodyRow('结论分析与体会', sections.conclusion)
+    ]
+  });
+  return new Document({
+    sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1080, right: 1080, bottom: 1080, left: 1440 } } }, children: [
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [new TextRun({ text: '山东大学计算机科学与技术学院', font: 'SimHei', size: 28, bold: true })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 280 }, children: [new TextRun({ text: '计算机系统与体系结构课程实验报告', font: 'SimHei', size: 28, bold: true })] }),
+      infoTable,
+      new Paragraph({ spacing: { before: 60, after: 60 }, children: [new TextRun('')] }),
+      bodyTable,
+      new Paragraph({ spacing: { before: 160 }, children: [new TextRun({ text: '注：实验报告的命名规则：学号_姓名_实验n_班级', font: 'SimSun', size: 20, color: '888888' })] })
+    ]}]
+  });
+}
+
+async function download() {
+  const dlBtn = document.getElementById('dl-btn');
+  dlBtn.textContent = '生成中...';
+  try {
+    const doc = buildDocx();
+    const buf = await docx.Packer.toBuffer(doc);
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const sid = document.getElementById('sid').value || '学号';
+    const nm  = document.getElementById('sname').value || '姓名';
+    const exp = (document.getElementById('stitle').value || '实验报告').replace(/\s/g,'');
+    a.href = url; a.download = sid + '_' + nm + '_' + exp + '.docx'; a.click();
+    URL.revokeObjectURL(url);
+    dlBtn.textContent = '已下载';
+    setTimeout(() => dlBtn.textContent = '下载 .docx', 2000);
+  } catch(e) {
+    alert('Word 文件生成失败：' + e.message);
+    dlBtn.textContent = '下载 .docx';
+  }
+}
+</script>
+</body>
+</html>
